@@ -32,7 +32,7 @@ while True:
 	while n < data_pool['data']['txs_no']:
 		timestamp = data_pool['data']['txs'][num]['timestamp']
 		txs_size = data_pool['data']['txs'][num]['tx_size']
-		fee = data_pool['data']['txs'][num]['tx_fee']/float(1e12)
+		fee = data_pool['data']['txs'][num]['tx_fee'] / 1000000000000.0
 		ring_size = data_pool['data']['txs'][num]['mixin']
 
 		tx_age = int(time.time() - timestamp)
@@ -41,13 +41,13 @@ while True:
 
 			valid_txs.append( txs_size )
 			valid_waits.append( [tx_age, fee, txs_size])
-		
+
 		num = num + 1
-		n = n + 1
+		n += 1
 
 	poolsize = sum(valid_txs)
 
-	if len(valid_txs) == 0:
+	if not valid_txs:
 		med_small_tx = 0
 	elif len(valid_txs) == 1:
 		med_small_tx = valid_txs[0]
@@ -70,7 +70,7 @@ while True:
 		block_sizes.append(block_size)
 		tph = block_txs + tph
 		num = num + 1
-		n = n + 1
+		n += 1
 	print(' ======================')
 
 	med_30_size = statistics.median(block_sizes)
@@ -83,13 +83,13 @@ while True:
 	dyn_size_exp = dyn_size * (1 + fee_lv)
 	block_mb_day = dyn_size * 720 / 1048576
 	block_usage = avg_30_size/(dyn_size)*100
-	
+
 # wait block caculation
 	valids = 0
 	wait_block_p = int( sum(valid_txs) / (dyn_size_exp) + 1)
 
 # predict valid txs in this block
-	if len(valid_txs) == 0:
+	if not valid_txs:
 		valids = 0
 	elif sum(valid_txs)/med_small_tx > len(valid_txs):
 		valids = len(valid_txs)
@@ -100,11 +100,11 @@ while True:
 
 	this_block = valids*med_small_tx
 	this_block_load = this_block/dyn_size*100
-	
+
 # longest valid txs wait
 	wait_block_longest = 1
 
-	if len(valid_waits) != 0:
+	if valid_waits:
 		longest_valid = ' Longest valid txs wait: %s (fee: %.4f, size: %.2f kB)\n' % (time.strftime("%H:%M:%S",time.gmtime(valid_waits[-1][0])), valid_waits[-1][1], valid_waits[-1][2]/1024)
 		wait_block_longest = int(valid_waits[-1][0]/120 +1)
 	else:
@@ -133,11 +133,14 @@ while True:
 	print(' Block usage: %.2f %%\n' % block_usage )
 	print(' Approx. tx speed per hour: %d TPH\n' % tph)
 	print( longest_valid )
-	print(' Predicted block txs: %d valid txs (%.fk) ( %.0f%% )\n' % (int(valids), valids*med_small_tx/1024, this_block_load))
+	print(
+		' Predicted block txs: %d valid txs (%.fk) ( %.0f%% )\n'
+		% (valids, valids * med_small_tx / 1024, this_block_load)
+	)
 	print(' Predicted block time: predict: %d, tph: %d, longest: %d\n' % (wait_block_p, wait_block_tph, wait_block_longest))
 	print(' Average wait time: %d +- %d blocks ( %d hr: %d min )\n' % (wait_block, wait_block_sd, wait_hr, wait_min))
 
-	
+
 # update thingspeak
 	# thingspeak_key = open('thingspeak_key.txt', 'r')
 	# url_thingspeak = 'https://api.thingspeak.com/update?api_key='+ thingspeak_key.readline()
@@ -148,10 +151,10 @@ while True:
 	# 	resp_thingspeak = requests.get(url=url_thingspeak+url_data, timeout=20)
 	# except requests.exceptions.RequestException as err:
 	# 	print(' ERROR: '+ str(err))
-	
+
 	# print(' HTTP:'+ str(resp_thingspeak))
 	# print(' Entry:'+ str(resp_thingspeak.text))
-		
+
 
 	last_check = time.time()
 	update_time_stamp = str(datetime.now().isoformat(timespec='minutes'))

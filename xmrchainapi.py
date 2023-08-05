@@ -4,28 +4,28 @@ import json, requests, time
 def getjson(arg):
 
 	# get network data
-	url = ('https://xmrchain.net/api/%s' % (arg))
+	url = f'https://xmrchain.net/api/{arg}'
 	print('\n Connecting to: '+ url[7:])
 
 	while True: 
 		try:
 			resp = requests.get(url = url, timeout = 20)
 		except requests.exceptions.RequestException as err:
-			print(' ERROR: '+ str(err))
+			print(f' ERROR: {str(err)}')
 			print(' Retry in 10s ...\n')
 			time.sleep(10)
 			continue
 
-		print(' HTTP:'+ str(resp))
+		print(f' HTTP:{str(resp)}')
 
-		
+
 		if str(resp) == '<Response [200]>':
 			try:
 				jsontext = json.loads(resp.text)
 			except ValueError:
 				print ('Decoding JSON has failed')
 				continue
-		
+
 			if jsontext['status'] == 'success':
 				print(' JSON OK')
 				break
